@@ -1,0 +1,10 @@
+160353105 nbr element + 1 donc 160353104
+
+ts 6 bytes
+x 2 bytes
+y 2 bytes
+col 1 byte
+
+11 bytes
+
+11 * 160353105 = 1763884155 bytes total = 1.763884155 Gb

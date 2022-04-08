@@ -10,9 +10,9 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class DataHandler : MonoBehaviour
+public class DataHandler
 {
-    public struct Pixel
+    public class Pixel
     {
         public Pixel(long time, int x, int y, Color color)
         {
@@ -28,118 +28,95 @@ public class DataHandler : MonoBehaviour
         public Color color { get; }
     }
 
-    public RawImage m_RawImage;
-    private Texture2D m_Texture;
-
-    public FileInfo f;
-    private List<Pixel> pixels = new List<Pixel>();
-    
-    static private Color getColor(int num_color)
+    private static Color[] colorsv1 =
     {
-        switch (num_color)
+        new Color32(255, 255, 255, 255),
+        new Color32(228, 228, 228, 255),
+        new Color32(136, 136, 136, 255),
+        new Color32(34, 34, 34, 255),
+        new Color32(255, 167, 209, 255),
+        new Color32(229, 0, 0, 255),
+        new Color32(229, 149, 0, 255),
+        new Color32(160, 106, 66, 255),
+        new Color32(229, 217, 0, 255),
+        new Color32(148, 224, 68, 255),
+        new Color32(2, 190, 1, 255),
+        new Color32(0, 229, 240, 255),
+        new Color32(0, 131, 199, 255),
+        new Color32(0, 0, 234, 255),
+        new Color32(224, 74, 255, 255),
+        new Color32(130, 0, 255, 255),
+        new Color32(0, 0, 0, 255)
+    };
+    
+    static Color[] colorsv2 =
+    {
+        new Color32(0x00,0x00,0x00,0xFF),
+        new Color32(0x00,0x75,0x6F,0xFF),
+        new Color32(0x00,0x9E,0xAA,0xFF),
+        new Color32(0x00,0xA3,0x68,0xFF),
+        new Color32(0x00,0xCC,0x78,0xFF),
+        new Color32(0x00,0xCC,0xC0,0xFF),
+        new Color32(0x24,0x50,0xA4,0xFF),
+        new Color32(0x36,0x90,0xEA,0xFF),
+        new Color32(0x49,0x3A,0xC1,0xFF),
+        new Color32(0x51,0x52,0x52,0xFF),
+        new Color32(0x51,0xE9,0xF4,0xFF),
+        new Color32(0x6A,0x5C,0xFF,0xFF),
+        new Color32(0x6D,0x00,0x1A,0xFF),
+        new Color32(0x6D,0x48,0x2F,0xFF),
+        new Color32(0x7E,0xED,0x56,0xFF),
+        new Color32(0x81,0x1E,0x9F,0xFF),
+        new Color32(0x89,0x8D,0x90,0xFF),
+        new Color32(0x94,0xB3,0xFF,0xFF),
+        new Color32(0x9C,0x69,0x26,0xFF),
+        new Color32(0xB4,0x4A,0xC0,0xFF),
+        new Color32(0xBE,0x00,0x39,0xFF),
+        new Color32(0xD4,0xD7,0xD9,0xFF),
+        new Color32(0xDE,0x10,0x7F,0xFF),
+        new Color32(0xE4,0xAB,0xFF,0xFF),
+        new Color32(0xFF,0x38,0x81,0xFF),
+        new Color32(0xFF,0x45,0x00,0xFF),
+        new Color32(0xFF,0x99,0xAA,0xFF),
+        new Color32(0xFF,0xA8,0x00,0xFF),
+        new Color32(0xFF,0xB4,0x70,0xFF),
+        new Color32(0xFF,0xD6,0x35,0xFF),
+        new Color32(0xFF,0xF8,0xB8,0xFF),
+        new Color32(0xFF,0xFF,0xFF,0xFF)
+    };
+
+    static private Color getColor(int num_color, int colorVersion)
+    {
+        if (colorVersion == 0)
         {
-            case 0:
-                return new Color32(255,255,255,255);
-                break;
-            case 1:
-                return new Color32(228,228,228,255);
-                break;
-            case 2:
-                return new Color32(136,136,136,255);
-                break;
-            case 3:
-                return new Color32(34,34,34,255);
-                break;
-            case 4:
-                return new Color32(255,167,209,255);
-                break;
-            case 5:
-                return new Color32(229,0,0,255);
-                break;
-            case 6:
-                return new Color32(229,149,0,255);
-                break;
-            case 7:
-                return new Color32(160,106,66,255);
-                break;
-            case 8:
-                return new Color32(229,217,0,255);
-                break; 
-            case 9:
-                return new Color32(148,224,68,255);
-                break; 
-            case 10:
-                return new Color32(2,190,1,255);
-                break; 
-            case 11:
-                return new Color32(0,229,240,255);
-                break; 
-            case 12:
-                return new Color32(0,131,199,255);
-                break; 
-            case 13:
-                return new Color32(0,0,234,255);
-                break; 
-            case 14:
-                return new Color32(224,74,255,255);
-                break; 
-            case 15:
-                return new Color32(130,0,255,255);
-                break; 
-            default:
-                return new Color32(0, 0, 0,255);
-                break;
+            return colorsv1[num_color];
         }
+        else if (colorVersion == 1)
+        {
+            return colorsv2[num_color];
+        }
+        return new Color32(0, 0, 0,255);
     }
     
-    void readFile()
+    public static IEnumerator readFile(string filename, int colorVersion, int max_size, Texture2D m_Texture, int speed)
     {
-        BinaryReader binReader = new BinaryReader(File.Open("Assets/data.bin", FileMode.Open));
+        BinaryReader binReader = new BinaryReader(File.Open("Assets/"+filename, FileMode.Open));
         long length = (long)binReader.BaseStream.Length;
+        long i = 0;
         while (binReader.BaseStream.Position != length)
         {
-            long time = binReader.ReadInt64();  
-            int x = binReader.ReadInt16();  
-            int y = 1000-binReader.ReadInt16();  
-            Color color = getColor(binReader.ReadInt16());
-            pixels.Add(new Pixel(time,x,y,color));
-        }
-    }
-    
-    IEnumerator draw()
-    {
-        long i = 0;
-        foreach (var pixel in pixels)
-        {
-            
-            m_Texture.SetPixel(pixel.x,pixel.y,pixel.color);
+            int x = max_size - binReader.ReadInt16();  
+            int y = binReader.ReadInt16();  
+            Color color = getColor(binReader.ReadByte(), colorVersion);
+
+            m_Texture.SetPixel(x,y,color);
             i++;
-            if (i % 100 == 0)
+            if (i % speed == 0)
             {
                 m_Texture.Apply();
                 yield return null;
             }
         }
-    }
-
-    async void Start()
-    {
-        m_Texture = new Texture2D(1000, 1000, TextureFormat.ARGB32, false);
-        for (int i = 0; i < 1000; i++)
-        {
-            for (int j = 0; j < 1000; j++)
-            {
-                m_Texture.SetPixel(i,j,Color.white);
-            }
-        }
         m_Texture.Apply();
-        m_RawImage.texture = m_Texture;
-        m_Texture.filterMode = FilterMode.Point;
-
-        readFile();
-        pixels = pixels.OrderBy(x => x.time).ToList();
-        Debug.Log("done");
-
-        StartCoroutine(draw());
     }
 }

@@ -73,5 +73,5 @@ crashlytics-build.properties
 
 .idea/*
 tile_placements_sorted.csv
-data.bin
-data.bin.meta
+*.bin
+*.bin.meta
